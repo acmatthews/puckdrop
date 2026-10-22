@@ -43,7 +43,7 @@ export default function App() {
         <img className="hero-image" src={rinkHero} alt="" />
         <div className="hero-veil" />
         <div className="hero-content">
-          <p className="brand">Puck Drop</p>
+          <p className="brand">puckdrop</p>
           <h1>Upcoming NHL games, lined up by the ice.</h1>
           <p className="lede">
             Live slate from the NHL schedule — tonight first, then the rest of the week.

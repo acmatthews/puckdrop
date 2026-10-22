@@ -93,11 +93,11 @@ a {
 
 .brand {
   margin: 0 0 0.35rem;
-  font-family: var(--font-display);
-  font-size: clamp(4.5rem, 14vw, 8.5rem);
-  letter-spacing: 0.04em;
-  line-height: 0.9;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(3.4rem, 11vw, 6.5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.95;
   text-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
@@ -425,7 +425,7 @@ a {
   }
 
   .brand {
-    font-size: clamp(3.6rem, 18vw, 5.5rem);
+    font-size: clamp(2.75rem, 14vw, 4.25rem);
   }
 
   .cta {

@@ -33,5 +33,5 @@ app.get(/.*/, (_req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`PUCK DROP listening on http://localhost:${port}`)
+  console.log(`puckdrop listening on http://localhost:${port}`)
 })

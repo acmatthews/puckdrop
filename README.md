@@ -1,4 +1,4 @@
-# Puck Drop
+# puckdrop
 
 A small web app that shows upcoming NHL games for the current week, pulled live from the NHL public schedule API.
 
