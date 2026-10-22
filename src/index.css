@@ -324,6 +324,10 @@ img {
   line-height: 1.15;
 }
 
+.card-when-local {
+  color: var(--led);
+}
+
 .card-live {
   display: inline-block;
   margin: 0.4rem 0 0;

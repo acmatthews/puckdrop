@@ -59,7 +59,7 @@ export default function App() {
             ) : null}
           </div>
 
-          <p className="hint">Hover a city for the matchup. Times in Eastern.</p>
+          <p className="hint">Hover a city for the matchup. Eastern time, and yours.</p>
         </section>
       </main>
 

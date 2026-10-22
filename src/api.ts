@@ -14,7 +14,9 @@ export function isUpcomingGame(game: ScheduleGame): boolean {
   return !FINISHED_STATES.has(game.gameState)
 }
 
-export function formatGameWhen(startTimeUTC: string, timeZone = 'America/Toronto'): string {
+const EASTERN_TIME_ZONE = 'America/Toronto'
+
+export function formatGameWhen(startTimeUTC: string, timeZone = EASTERN_TIME_ZONE): string {
   return new Intl.DateTimeFormat('en-US', {
     timeZone,
     weekday: 'short',
@@ -24,6 +26,19 @@ export function formatGameWhen(startTimeUTC: string, timeZone = 'America/Toronto
     minute: '2-digit',
     timeZoneName: 'short',
   }).format(new Date(startTimeUTC))
+}
+
+export function gameClocks(startTimeUTC: string): { eastern: string; local: string | null } {
+  const eastern = formatGameWhen(startTimeUTC, EASTERN_TIME_ZONE)
+  const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (!localZone) return { eastern, local: null }
+
+  try {
+    const local = formatGameWhen(startTimeUTC, localZone)
+    return { eastern, local: local === eastern ? null : local }
+  } catch {
+    return { eastern, local: null }
+  }
 }
 
 export function gameStatusLabel(game: ScheduleGame): string {

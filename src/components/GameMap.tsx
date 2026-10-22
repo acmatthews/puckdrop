@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatGameWhen, gameStatusLabel } from '../api'
+import { gameClocks, gameStatusLabel } from '../api'
 import { countryPath, lakePath, mapFit } from '../map/land'
 import { cityPins } from '../map/pins'
 import type { GameWeekDay, ScheduleGame } from '../types'
@@ -87,7 +87,8 @@ function tipClass(xPct: number, yPct: number): string {
 }
 
 function pinLabel(city: string, game: ScheduleGame): string {
-  const when = formatGameWhen(game.startTimeUTC)
+  const clocks = gameClocks(game.startTimeUTC)
+  const when = clocks.local ? `${clocks.eastern}; your time ${clocks.local}` : clocks.eastern
   return `${city}: ${game.awayTeam.commonName.default} at ${game.homeTeam.commonName.default}, ${when}`
 }
 
@@ -110,13 +111,15 @@ function GameCard({ city, game }: { city: string; game: ScheduleGame }) {
   const status = gameStatusLabel(game)
   const live = game.gameState === 'LIVE' || game.gameState === 'CRIT'
   const networks = uniqueNetworks(game)
+  const clocks = gameClocks(game.startTimeUTC)
 
   return (
     <article className="card">
       <header className="card-head">
         <p className="card-city">{city}</p>
         <p className="card-venue">{game.venue.default}</p>
-        <p className="card-when">{formatGameWhen(game.startTimeUTC)}</p>
+        <p className="card-when">{clocks.eastern}</p>
+        {clocks.local ? <p className="card-when card-when-local">Your time · {clocks.local}</p> : null}
         {live ? <p className="card-live">{status}</p> : null}
       </header>
       <div className="card-match">
