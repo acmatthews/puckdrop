@@ -1,0 +1,175 @@
+/**
+ * Builds src/map/land.ts from Natural Earth 50m country and lake polygons.
+ * Public-domain source: https://www.naturalearthdata.com/
+ *
+ * Usage:
+ *   node --experimental-strip-types scripts/build-land.ts /tmp/countries.geojson /tmp/lakes.geojson
+ */
+import { writeFileSync } from 'node:fs'
+import { projectRaw } from '../src/map/projection.ts'
+
+type Geometry = {
+  type: 'Polygon' | 'MultiPolygon'
+  coordinates: number[][][] | number[][][][]
+}
+
+type Feature = {
+  properties: { NAME?: string; name?: string }
+  geometry: Geometry
+}
+
+type Collection = { features: Feature[] }
+
+const countriesPath = process.argv[2] ?? '/tmp/countries.geojson'
+const lakesPath = process.argv[3] ?? '/tmp/lakes.geojson'
+const countries = JSON.parse(await read(countriesPath)) as Collection
+const lakes = JSON.parse(await read(lakesPath)) as Collection
+
+const COUNTRY_NAMES = new Set(['Canada', 'United States of America', 'Mexico'])
+const LAKE_NAMES = new Set([
+  'Lake Winnipeg',
+  'Great Slave Lake',
+  'Lake Ontario',
+  'Lake Erie',
+  'Lake Superior',
+  'Lake Okeechobee',
+  'Lago de Nicaragua',
+  'Great Salt Lake',
+  'Great Bear Lake',
+  'Lake Athabasca',
+  'Reindeer Lake',
+  'Lake Huron',
+  'Lake Michigan',
+])
+
+function keepRing(ring: number[][]): boolean {
+  let lon = 0
+  let lat = 0
+  for (const point of ring) {
+    lon += point[0]
+    lat += point[1]
+  }
+  lon /= ring.length
+  lat /= ring.length
+  const alaska = lat > 50 && lon < -129 && lon > -170
+  const mainland = lon >= -141 && lon <= -50 && lat >= 14 && lat <= 72
+  return alaska || mainland
+}
+
+function ringsOf(geometry: Geometry): number[][][] {
+  if (geometry.type === 'Polygon') return geometry.coordinates as number[][][]
+  return (geometry.coordinates as number[][][][]).map((polygon) => polygon[0])
+}
+
+function simplify(points: { x: number; y: number }[], epsilon: number) {
+  if (points.length < 3) return points
+  const keep = new Array<boolean>(points.length).fill(false)
+  keep[0] = true
+  keep[points.length - 1] = true
+
+  const stack: Array<[number, number]> = [[0, points.length - 1]]
+  while (stack.length > 0) {
+    const [start, end] = stack.pop()!
+    let maxDistance = 0
+    let maxIndex = start
+    const startPoint = points[start]
+    const endPoint = points[end]
+    const dx = endPoint.x - startPoint.x
+    const dy = endPoint.y - startPoint.y
+    const length = Math.hypot(dx, dy) || 1
+    for (let index = start + 1; index < end; index += 1) {
+      const point = points[index]
+      const distance = Math.abs(dy * point.x - dx * point.y + endPoint.x * startPoint.y - endPoint.y * startPoint.x) / length
+      if (distance > maxDistance) {
+        maxDistance = distance
+        maxIndex = index
+      }
+    }
+    if (maxDistance > epsilon) {
+      keep[maxIndex] = true
+      stack.push([start, maxIndex], [maxIndex, end])
+    }
+  }
+
+  return points.filter((_, index) => keep[index])
+}
+
+function pathFor(features: Feature[], names: Set<string>): string {
+  const commands: string[] = []
+  for (const feature of features) {
+    const name = feature.properties.NAME ?? feature.properties.name ?? ''
+    if (!names.has(name)) continue
+    for (const ring of ringsOf(feature.geometry)) {
+      if (!keepRing(ring)) continue
+      const raw = ring.map((point) => projectRaw(point[0], point[1]))
+      const closed =
+        raw.length > 1 &&
+        Math.abs(raw[0].x - raw[raw.length - 1].x) < 1e-9 &&
+        Math.abs(raw[0].y - raw[raw.length - 1].y) < 1e-9
+      const open = closed ? raw.slice(0, -1) : raw
+      const projected = simplify(open, 0.0012)
+      if (projected.length < 3) continue
+      if (closed) projected.push(projected[0])
+      projected.forEach((point) => {
+        bounds.xs.push(point.x)
+        bounds.ys.push(point.y)
+      })
+      projected.forEach((point, index) => {
+        const verb = index === 0 ? 'M' : 'L'
+        commands.push(`${verb}${point.x.toFixed(4)} ${point.y.toFixed(4)}`)
+      })
+      commands.push('Z')
+    }
+  }
+  return commands.join('')
+}
+
+const bounds = { xs: [] as number[], ys: [] as number[] }
+const countryPath = pathFor(countries.features, COUNTRY_NAMES)
+const lakePath = pathFor(lakes.features, LAKE_NAMES)
+
+const minX = Math.min(...bounds.xs)
+const maxX = Math.max(...bounds.xs)
+const minY = Math.min(...bounds.ys)
+const maxY = Math.max(...bounds.ys)
+const pad = 36
+const width = 1000
+const scale = (width - pad * 2) / (maxX - minX)
+const height = (maxY - minY) * scale + pad * 2
+
+function fitPath(d: string): string {
+  return d.replace(/-?\d+\.\d+/g, (value, offset, source) => {
+    const numeric = Number(value)
+    const isX = source[offset - 1] !== ' '
+    if (isX) return ((numeric - minX) * scale + pad).toFixed(1)
+    return ((maxY - numeric) * scale + pad).toFixed(1)
+  })
+}
+
+const fittedCountries = fitPath(countryPath)
+const fittedLakes = fitPath(lakePath)
+
+const source = `// Generated by scripts/build-land.ts from Natural Earth 50m (public domain).
+import type { MapFit } from './projection'
+
+export const mapFit: MapFit = {
+  minX: ${minX},
+  maxY: ${maxY},
+  scale: ${scale},
+  pad: ${pad},
+  width: ${width.toFixed(1)},
+  height: ${height.toFixed(1)},
+}
+
+export const countryPath = '${fittedCountries}'
+
+export const lakePath = '${fittedLakes}'
+`
+
+writeFileSync(new URL('../src/map/land.ts', import.meta.url), source)
+console.log(`wrote land.ts ${width.toFixed(1)} x ${height.toFixed(1)}`)
+
+async function read(path: string): Promise<string> {
+  const { readFile } = await import('node:fs/promises')
+  return readFile(path, 'utf8')
+}

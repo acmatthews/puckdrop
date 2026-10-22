@@ -14,22 +14,16 @@ export function isUpcomingGame(game: ScheduleGame): boolean {
   return !FINISHED_STATES.has(game.gameState)
 }
 
-export function formatGameTime(startTimeUTC: string, timeZone = 'America/Toronto'): string {
-  return new Intl.DateTimeFormat('en-CA', {
+export function formatGameWhen(startTimeUTC: string, timeZone = 'America/Toronto'): string {
+  return new Intl.DateTimeFormat('en-US', {
     timeZone,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZoneName: 'short',
   }).format(new Date(startTimeUTC))
-}
-
-export function formatDayHeading(date: string, timeZone = 'America/Toronto'): string {
-  const parsed = new Date(`${date}T12:00:00`)
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }).format(parsed)
 }
 
 export function gameStatusLabel(game: ScheduleGame): string {

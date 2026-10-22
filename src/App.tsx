@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchSchedule } from './api'
-import rinkHero from './assets/rink-hero.jpg'
-import { Schedule } from './components/Schedule'
+import { GameMap } from './components/GameMap'
 import type { GameWeekDay } from './types'
 
 type LoadState =
@@ -18,9 +17,7 @@ export default function App() {
     async function load() {
       try {
         const data = await fetchSchedule()
-        if (!cancelled) {
-          setState({ status: 'ready', days: data.gameWeek })
-        }
+        if (!cancelled) setState({ status: 'ready', days: data.gameWeek })
       } catch (error) {
         if (!cancelled) {
           setState({
@@ -37,43 +34,28 @@ export default function App() {
     }
   }, [])
 
+  const days = state.status === 'ready' ? state.days : []
+
   return (
     <div className="app">
-      <header className="hero">
-        <img className="hero-image" src={rinkHero} alt="" />
-        <div className="hero-veil" />
-        <div className="hero-content">
-          <p className="brand">puckdrop</p>
-          <h1>Upcoming NHL games, lined up by the ice.</h1>
-          <p className="lede">
-            Live slate from the NHL schedule — tonight first, then the rest of the week.
-          </p>
-          <a className="cta" href="#schedule">
-            See the schedule
-          </a>
-        </div>
+      <header className="top">
+        <p className="brand">puckdrop</p>
+        <h1>Next game in each city</h1>
+        <p className="hint">Hover a city for the matchup. Times in Eastern.</p>
       </header>
 
-      <main id="schedule" className="main">
-        <div className="section-intro">
-          <h2>This week&apos;s puck drops</h2>
-          <p>Times shown in Eastern (America/Toronto).</p>
-        </div>
-
+      <main className="map-wrap">
+        <GameMap days={days} />
         {state.status === 'loading' ? <p className="status-line">Loading the schedule…</p> : null}
         {state.status === 'error' ? (
           <p className="status-line error" role="alert">
             {state.message}
           </p>
         ) : null}
-        {state.status === 'ready' ? <Schedule days={state.days} /> : null}
       </main>
 
       <footer className="footer">
-        <p>
-          Schedule data from the public NHL web API. Not affiliated with the National Hockey
-          League.
-        </p>
+        <p>Schedule data from the public NHL web API. Not affiliated with the National Hockey League.</p>
       </footer>
     </div>
   )

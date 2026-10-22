@@ -26,6 +26,7 @@ export type ScheduleGame = {
   season: number
   gameType: number
   venue: LocalizedName
+  neutralSite?: boolean
   startTimeUTC: string
   easternUTCOffset: string
   venueTimezone: string
