@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { gameClocks, gameStatusLabel } from '../api'
+import { broadcastChips } from '../broadcasts'
+import { Flag } from './Flags'
 import { countryPath, lakePath, mapFit } from '../map/land'
 import { cityPins } from '../map/pins'
 import type { GameWeekDay, ScheduleGame } from '../types'
@@ -89,7 +91,11 @@ function tipClass(xPct: number, yPct: number): string {
 function pinLabel(city: string, game: ScheduleGame): string {
   const clocks = gameClocks(game.startTimeUTC)
   const when = clocks.local ? `${clocks.eastern}; your time ${clocks.local}` : clocks.eastern
-  return `${city}: ${game.awayTeam.commonName.default} at ${game.homeTeam.commonName.default}, ${when}`
+  const broadcasts = broadcastChips(game)
+    .map((chip) => `${chip.network}, ${chip.countryName}`)
+    .join('; ')
+  const onAir = broadcasts ? ` On ${broadcasts}.` : ''
+  return `${city}: ${game.awayTeam.commonName.default} at ${game.homeTeam.commonName.default}, ${when}.${onAir}`
 }
 
 function PinMark() {
@@ -110,7 +116,7 @@ function PinMark() {
 function GameCard({ city, game }: { city: string; game: ScheduleGame }) {
   const status = gameStatusLabel(game)
   const live = game.gameState === 'LIVE' || game.gameState === 'CRIT'
-  const networks = uniqueNetworks(game)
+  const broadcasts = broadcastChips(game)
   const clocks = gameClocks(game.startTimeUTC)
 
   return (
@@ -137,7 +143,16 @@ function GameCard({ city, game }: { city: string; game: ScheduleGame }) {
           name={game.homeTeam.commonName.default}
         />
       </div>
-      {networks.length > 0 ? <p className="card-tv">{networks.join(' · ')}</p> : null}
+      {broadcasts.length > 0 ? (
+        <ul className="broadcasts">
+          {broadcasts.map((chip) => (
+            <li key={`${chip.country}-${chip.network}`}>
+              <Flag country={chip.country} />
+              <span>{chip.network}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </article>
   )
 }
@@ -152,14 +167,3 @@ function TeamSide({ logo, place, name }: { logo: string; place: string; name: st
   )
 }
 
-function uniqueNetworks(game: ScheduleGame): string[] {
-  const seen = new Set<string>()
-  const networks: string[] = []
-  for (const broadcast of game.tvBroadcasts ?? []) {
-    if (seen.has(broadcast.network)) continue
-    seen.add(broadcast.network)
-    networks.push(broadcast.network)
-    if (networks.length === 3) break
-  }
-  return networks
-}

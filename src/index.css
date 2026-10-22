@@ -298,7 +298,7 @@ img {
 
 .card-head,
 .card-match,
-.card-tv {
+.broadcasts {
   position: relative;
 }
 
@@ -316,8 +316,7 @@ img {
 }
 
 .card-venue,
-.card-when,
-.card-tv {
+.card-when {
   margin: 0.28rem 0 0;
   color: var(--amber);
   font-size: 1.02rem;
@@ -384,8 +383,31 @@ img {
   font-size: 0.7rem;
 }
 
-.card-tv {
-  text-align: center;
+.broadcasts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.broadcasts li {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--led);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.flag {
+  width: 1.45rem;
+  height: 0.85rem;
+  flex: none;
+  border: 1px solid rgba(242, 193, 75, 0.8);
+  box-shadow: 1px 1px 0 #000;
 }
 
 .status-line {
