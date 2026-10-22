@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchSchedule } from './api'
 import { GameMap } from './components/GameMap'
+import { Mullet } from './components/Mullet'
 import type { GameWeekDay } from './types'
 
 type LoadState =
@@ -38,20 +39,28 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="top">
-        <p className="brand">puckdrop</p>
-        <h1>Next game in each city</h1>
-        <p className="hint">Hover a city for the matchup. Times in Eastern.</p>
-      </header>
-
       <main className="map-wrap">
-        <GameMap days={days} />
-        {state.status === 'loading' ? <p className="status-line">Loading the schedule…</p> : null}
-        {state.status === 'error' ? (
-          <p className="status-line error" role="alert">
-            {state.message}
-          </p>
-        ) : null}
+        <section className="board" aria-label="puckdrop">
+          <header className="marquee">
+            <Mullet />
+            <div className="marquee-copy">
+              <p className="brand">puckdrop</p>
+              <h1>Next game in each city</h1>
+            </div>
+          </header>
+
+          <div className="screen">
+            <GameMap days={days} />
+            {state.status === 'loading' ? <p className="status-line">Loading the schedule…</p> : null}
+            {state.status === 'error' ? (
+              <p className="status-line error" role="alert">
+                {state.message}
+              </p>
+            ) : null}
+          </div>
+
+          <p className="hint">Hover a city for the matchup. Times in Eastern.</p>
+        </section>
       </main>
 
       <footer className="footer">

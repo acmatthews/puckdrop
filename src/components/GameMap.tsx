@@ -28,6 +28,7 @@ export function GameMap({ days }: Props) {
         <path className="land" d={countryPath} />
         <path className="lakes" d={lakePath} />
       </svg>
+      <div className="scanlines" aria-hidden="true" />
 
       <div className="pins">
         {pins.map((pin) => {
@@ -92,9 +93,15 @@ function pinLabel(city: string, game: ScheduleGame): string {
 
 function PinMark() {
   return (
-    <svg viewBox="0 0 32 42" aria-hidden="true">
-      <path d="M16 1.2c7.1 0 12.8 5.5 12.8 12.4 0 8.6-12.8 27-12.8 27S3.2 22.2 3.2 13.6C3.2 6.7 8.9 1.2 16 1.2z" />
-      <circle cx="16" cy="13.8" r="4.6" />
+    <svg viewBox="0 0 8 11" shapeRendering="crispEdges" aria-hidden="true">
+      <rect className="pin-body" x="2" y="0" width="4" height="1" />
+      <rect className="pin-body" x="1" y="1" width="6" height="1" />
+      <rect className="pin-body" x="0" y="2" width="8" height="1" />
+      <rect className="pin-body" x="0" y="3" width="8" height="1" />
+      <rect className="pin-body" x="1" y="4" width="6" height="1" />
+      <rect className="pin-body" x="2" y="5" width="4" height="1" />
+      <rect className="pin-body" x="3" y="6" width="2" height="5" />
+      <rect className="pin-bulb" x="3" y="2" width="2" height="2" />
     </svg>
   )
 }
