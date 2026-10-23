@@ -11,10 +11,7 @@
   --font-pixel: 'Press Start 2P', 'Pixelify Sans', monospace;
   --font-body: 'Pixelify Sans', 'Press Start 2P', monospace;
   color: var(--led);
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 42%, rgba(255, 106, 0, 0.16), transparent 58%),
-    repeating-linear-gradient(90deg, #120a08 0 14px, #0d0706 14px 15px),
-    #0c0706;
+  background: var(--screen);
   font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -31,7 +28,7 @@
 html,
 body,
 #root {
-  min-height: 100%;
+  height: 100%;
 }
 
 body {
@@ -55,43 +52,25 @@ img {
 }
 
 .app {
-  min-height: 100svh;
-  display: grid;
-  grid-template-rows: 1fr auto;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.map-wrap {
-  display: grid;
-  place-items: center;
-  padding: 0.75rem 0.75rem 0.35rem;
-}
-
-.board {
-  width: min(1080px, calc(100vw - 1rem), calc((100svh - 15.5rem) * 1000 / 938.7));
-  padding: 0.55rem;
-  background:
-    linear-gradient(#3a2218, #24140e 40%, #1a0e0a);
-  border: 4px solid var(--orange);
-  box-shadow:
-    0 0 0 6px #2a160e,
-    0 0 0 10px var(--gold),
-    0 22px 0 #0a0605,
-    0 28px 40px rgba(0, 0, 0, 0.55);
-}
-
-.marquee {
+.topbar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.45rem;
-  padding: 0.45rem 0.6rem;
+  flex: none;
+  padding: 0.4rem 0.9rem;
   background: #100804;
-  border: 3px solid var(--gold);
-  box-shadow: inset 0 0 0 2px #3a2012;
+  border-bottom: 4px solid var(--orange);
+  box-shadow: 0 3px 0 var(--gold);
 }
 
-.mullet {
-  width: 5.1rem;
+.helmet {
+  width: 5.4rem;
   height: auto;
   flex: none;
   image-rendering: pixelated;
@@ -113,7 +92,7 @@ img {
     3px 3px 0 #5a2408;
 }
 
-.marquee h1 {
+.topbar h1 {
   margin: 0.35rem 0 0;
   color: var(--led);
   font-size: clamp(0.95rem, 2vw, 1.25rem);
@@ -123,8 +102,8 @@ img {
 }
 
 .hint,
-.footer {
-  margin: 0.4rem 0 0;
+.footer p {
+  margin: 0;
   color: var(--gold);
   font-size: 1rem;
   line-height: 1.25;
@@ -132,32 +111,42 @@ img {
 }
 
 .footer {
-  padding: 0.2rem 1rem 0.45rem;
+  flex: none;
+  padding: 0.35rem 0.8rem 0.45rem;
+  background: #100804;
+  border-top: 3px solid var(--gold);
+}
+
+.footer p + p {
+  margin-top: 0.15rem;
   color: #a56b32;
   font-size: 0.95rem;
 }
 
 .screen {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
   background: var(--screen);
-  border: 3px solid #070d16;
-  box-shadow:
-    inset 0 0 0 2px #16325c,
-    inset 0 0 24px rgba(0, 0, 0, 0.45);
 }
 
 .stage {
-  position: relative;
-  width: 100%;
-  background:
-    radial-gradient(ellipse at 50% 45%, rgba(29, 78, 156, 0.35), transparent 62%),
-    var(--screen);
+  position: absolute;
+  inset: 0;
+  background: var(--screen);
+}
+
+.map-fit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .continent {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 .land {
@@ -251,7 +240,7 @@ img {
   bottom: calc(100% + 8px);
   z-index: 5;
   width: max-content;
-  max-width: min(340px, 78vw);
+  max-width: min(420px, 86vw);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -385,10 +374,12 @@ img {
 
 .broadcasts {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem 0.6rem;
-  margin: 0.7rem 0 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.42rem;
+  width: max-content;
+  max-width: 100%;
+  margin: 0.75rem auto 0;
   padding: 0;
   list-style: none;
 }
@@ -396,10 +387,18 @@ img {
 .broadcasts li {
   display: flex;
   align-items: center;
-  gap: 0.28rem;
+  gap: 0.45rem;
   color: var(--led);
-  font-size: 0.95rem;
-  line-height: 1;
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+
+.broadcast-network {
+  text-align: left;
+}
+
+.broadcast-network.is-na {
+  color: var(--muted);
 }
 
 .flag {
@@ -451,20 +450,19 @@ img {
 }
 
 @media (max-width: 640px) {
-  .board {
-    width: min(100%, calc(100vw - 0.6rem));
-    padding: 0.4rem;
+  .helmet {
+    width: 2.6rem;
   }
 
-  .mullet {
-    width: 3.2rem;
+  .topbar {
+    padding: 0.35rem 0.55rem;
   }
 
   .hint {
     display: none;
   }
 
-  .footer {
+  .footer p + p {
     font-size: 0.82rem;
   }
 

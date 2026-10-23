@@ -1,0 +1,36 @@
+/** Pixel helmet, shared by the header mark and the favicon. */
+export const HELMET_ROWS = [
+  '................................',
+  '..........oooooooooo............',
+  '........oohhhhhhhhhhhoo.........',
+  '.......ohhhhhhhhhhhhhhhho.......',
+  '......ohhhhsssssssssssshhho.....',
+  '......ohhhhhhhhhhhhhhhhhhho.....',
+  '......ohhhffffffffffffffhho.....',
+  '.....ohhhffEEffffffffEEffhho....',
+  '.....ohhhffEEffffffffEEffhho....',
+  '.....ohhhhffffffffffffffhho.....',
+  '.....ohhhhffffffNNffffffhho.....',
+  '.....ohhhhffffffffffffffhho.....',
+  '......ohhhcfcfcfcfcfcfcchho.....',
+  '......ohhffffffffffffffffhho....',
+  '......ohhfffMMMMMMMMffffhho.....',
+  '......ohhhcfcfcfcfcfcfcchho.....',
+  '......ohhffffffffffffffffhho....',
+  '.......ohhhccccccccccccchho.....',
+  '........oohhhhhhhhhhhhhhhoo.....',
+  '.........ooooooooooooooooo......',
+  '................................',
+  '................................',
+]
+
+export const HELMET_COLORS: Record<string, string> = {
+  o: '#141b27',
+  h: '#f5f7fb',
+  s: '#ff6a00',
+  f: '#f0c2a4',
+  E: '#1a120e',
+  N: '#d99274',
+  c: '#8b97a8',
+  M: '#5c331c',
+}

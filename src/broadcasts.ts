@@ -60,3 +60,18 @@ export function broadcastChips(game: ScheduleGame): BroadcastChip[] {
     network: chip.network,
   }))
 }
+
+const COUNTRIES: BroadcastCountry[] = ['CA', 'US', 'GB']
+
+/** One row per country. Missing coverage is the network text "N/A". */
+export function broadcastRows(game: ScheduleGame): BroadcastChip[] {
+  const chips = broadcastChips(game)
+  return COUNTRIES.map((country) => {
+    const networks = chips.filter((chip) => chip.country === country).map((chip) => chip.network)
+    return {
+      country,
+      countryName: NAMES[country],
+      network: networks.length > 0 ? networks.join(', ') : 'N/A',
+    }
+  })
+}

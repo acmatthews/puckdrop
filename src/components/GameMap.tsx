@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gameClocks, gameStatusLabel } from '../api'
-import { broadcastChips } from '../broadcasts'
+import { broadcastRows } from '../broadcasts'
 import { Flag } from './Flags'
+import { framePixelSize, visibleMapFrame, type MapFrame } from '../map/frame'
 import { countryPath, lakePath, mapFit } from '../map/land'
 import { cityPins } from '../map/pins'
 import type { GameWeekDay, ScheduleGame } from '../types'
@@ -12,18 +13,36 @@ type Props = {
 
 export function GameMap({ days }: Props) {
   const pins = cityPins(days)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [layout, setLayout] = useState<{ frame: MapFrame; width: number; height: number } | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const active = pins.find((pin) => pin.id === activeId) ?? null
+  const frame = layout?.frame ?? { x: 0, y: 0, w: mapFit.width, h: mapFit.height }
+
+  useEffect(() => {
+    const el = stageRef.current
+    if (!el) return
+    const update = () => {
+      const rect = el.getBoundingClientRect()
+      const next = visibleMapFrame(rect.width, rect.height)
+      const size = framePixelSize(next, rect.width, rect.height)
+      setLayout({ frame: next, width: size.width, height: size.height })
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div
-      className="stage"
-      style={{ aspectRatio: `${mapFit.width} / ${mapFit.height}` }}
-      onClick={() => setActiveId(null)}
-    >
+    <div className="stage" ref={stageRef} onClick={() => setActiveId(null)}>
+      <div
+        className="map-fit"
+        style={layout ? { width: layout.width, height: layout.height } : { width: '100%', height: '100%' }}
+      >
       <svg
         className="continent"
-        viewBox={`0 0 ${mapFit.width} ${mapFit.height}`}
+        viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`}
         role="img"
         aria-label="Map of North America"
       >
@@ -34,8 +53,8 @@ export function GameMap({ days }: Props) {
 
       <div className="pins">
         {pins.map((pin) => {
-          const xPct = (pin.x / mapFit.width) * 100
-          const yPct = (pin.y / mapFit.height) * 100
+          const xPct = ((pin.x - frame.x) / frame.w) * 100
+          const yPct = ((pin.y - frame.y) / frame.h) * 100
           const open = pin.id === activeId
           const label = pinLabel(pin.city, pin.game)
           return (
@@ -76,6 +95,7 @@ export function GameMap({ days }: Props) {
       </div>
 
       {active ? <span className="sr-only">{pinLabel(active.city, active.game)}</span> : null}
+      </div>
     </div>
   )
 }
@@ -91,11 +111,10 @@ function tipClass(xPct: number, yPct: number): string {
 function pinLabel(city: string, game: ScheduleGame): string {
   const clocks = gameClocks(game.startTimeUTC)
   const when = clocks.local ? `${clocks.eastern}; your time ${clocks.local}` : clocks.eastern
-  const broadcasts = broadcastChips(game)
-    .map((chip) => `${chip.network}, ${chip.countryName}`)
+  const broadcasts = broadcastRows(game)
+    .map((row) => `${row.countryName} ${row.network}`)
     .join('; ')
-  const onAir = broadcasts ? ` On ${broadcasts}.` : ''
-  return `${city}: ${game.awayTeam.commonName.default} at ${game.homeTeam.commonName.default}, ${when}.${onAir}`
+  return `${city}: ${game.awayTeam.commonName.default} at ${game.homeTeam.commonName.default}, ${when}. On ${broadcasts}.`
 }
 
 function PinMark() {
@@ -116,7 +135,7 @@ function PinMark() {
 function GameCard({ city, game }: { city: string; game: ScheduleGame }) {
   const status = gameStatusLabel(game)
   const live = game.gameState === 'LIVE' || game.gameState === 'CRIT'
-  const broadcasts = broadcastChips(game)
+  const broadcasts = broadcastRows(game)
   const clocks = gameClocks(game.startTimeUTC)
 
   return (
@@ -143,16 +162,16 @@ function GameCard({ city, game }: { city: string; game: ScheduleGame }) {
           name={game.homeTeam.commonName.default}
         />
       </div>
-      {broadcasts.length > 0 ? (
-        <ul className="broadcasts">
-          {broadcasts.map((chip) => (
-            <li key={`${chip.country}-${chip.network}`}>
-              <Flag country={chip.country} />
-              <span>{chip.network}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <ul className="broadcasts">
+        {broadcasts.map((row) => (
+          <li key={row.country}>
+            <Flag country={row.country} />
+            <span className={row.network === 'N/A' ? 'broadcast-network is-na' : 'broadcast-network'}>
+              - {row.network}
+            </span>
+          </li>
+        ))}
+      </ul>
     </article>
   )
 }
